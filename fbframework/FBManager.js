@@ -1,5 +1,4 @@
-
-function FBGame() {
+function FBManager() {
     if (window.FBInstant) {
         this._fbinstant = FBInstant;
     }
@@ -14,7 +13,7 @@ function FBGame() {
     this._bestScoreObj = {}; // cache all board bestscore
 
     this._globalRankCount = 30;
-	this._friendsRankCount = 30;
+    this._friendsRankCount = 30;
 
     this.SHARE_SCORE_TEXT_TEMPLATE = 'My score is {SCORE}, Can you beat me?';
     this.SHARE_NEW_TEXT_TEMPLATE = 'Can you beat me?';
@@ -27,30 +26,30 @@ function FBGame() {
     this._hasSelf = false;
 };
 
-FBGame.OrderType = {
+FBManager.OrderType = {
     'LOWER_IS_BETTER': 1,
     'HIGHER_IS_BETTER': 2
 };
 
-FBGame.ShareType = {
+FBManager.ShareType = {
     SHARE_INVITE: 'INVITE',
     SHARE_REQUEST: 'REQUEST',
     SHARE_CHALLENGE: 'CHALLENGE',
     SHARE_SHARE: 'SHARE'
 };
 
-FBGame.InviteFilterType = {
+FBManager.InviteFilterType = {
     NEW_CONTEXT_ONLY: 'NEW_CONTEXT_ONLY',
     INCLUDE_EXISTING_CHALLENGES: 'INCLUDE_EXISTING_CHALLENGES',
     NEW_PLAYERS_ONLY: 'NEW_PLAYERS_ONLY'
-}
+};
 
 
-FBGame.prototype = {
-    constructor: FBGame,
-    ShareType: FBGame.ShareType,
-    OrderType: FBGame.OrderType,
-    InviteFilterType: FBGame.InviteFilterType,
+FBManager.prototype = {
+    constructor: FBManager,
+    ShareType: FBManager.ShareType,
+    OrderType: FBManager.OrderType,
+    InviteFilterType: FBManager.InviteFilterType,
     /**
      * @param {{boardName:String, orderType:String, interstitialAdId:String, rewardAdId:String, globalCount:Number}} options
      */
@@ -90,12 +89,12 @@ FBGame.prototype = {
     },
     /**
      * 设置全球排行显示玩家数量
-     * @param {Number} value 
+     * @param {Number} value
      */
     setGlobalRankerCount(value) {
         this._globalRankCount = value;
     },
-	setFriendsRankerCount(value) {
+    setFriendsRankerCount(value) {
         this._friendsRankCount = value;
     },
     //////////////////////////////////////////// Rank ////////////////////////////////////////////
@@ -106,7 +105,7 @@ FBGame.prototype = {
      * @return {Promise}
      */
     submitScore(score, extraData) {
-        let self = this;
+        var self = this;
         score = parseInt(score);
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
@@ -114,24 +113,24 @@ FBGame.prototype = {
                     reject('submitScore: score can\'t be [A positive number]')
                     return;
                 }
-                let bestScore = self._bestScoreObj[self._boardName] || -1;
-                let isBetter = (self.isHigherBetter() ? score > bestScore : score < bestScore) && bestScore >= 0;
+                var bestScore = self._bestScoreObj[self._boardName] || -1;
+                var isBetter = (self.isHigherBetter() ? score > bestScore : score < bestScore) && bestScore >= 0;
                 if (isBetter || bestScore === -1) {
                     self._bestScoreObj[self._boardName] = score;
                     self._fbinstant.getLeaderboardAsync(self._boardName)
                         .then(function (leaderboard) {
                             return leaderboard.setScoreAsync(score, JSON.stringify(extraData || {}));
                         }).then(function (entry) {
-                            self._fbinstant.updateAsync({
-                                action: 'LEADERBOARD',
-                                name: self._boardName
-                            }).then(function () {
-                                console.log('update-rank-score');
-                            }).catch(function (error) {
-                                console.log('update-rank-score-error', error);
-                            });
-                            resolve('Update Posted');
-                        })
+                        self._fbinstant.updateAsync({
+                            action: 'LEADERBOARD',
+                            name: self._boardName
+                        }).then(function () {
+                            console.log('update-rank-score');
+                        }).catch(function (error) {
+                            console.log('update-rank-score-error', error);
+                        });
+                        resolve('Update Posted');
+                    })
                         .catch(function (error) {
                             reject('submitScore-error : ' + error.message);
                         });
@@ -150,7 +149,7 @@ FBGame.prototype = {
      * @return {Promise}
      */
     getMyRankData() {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.getLeaderboardAsync(self._boardName)
@@ -159,8 +158,8 @@ FBGame.prototype = {
                     })
                     .then(function (entry) {
                         if (entry) {
-                            let data = self._getEntryItem(entry);
-                            let bestScore = self._bestScoreObj[self._boardName];
+                            var data = self._getEntryItem(entry);
+                            var bestScore = self._bestScoreObj[self._boardName];
                             if (typeof bestScore === 'number') {
                                 if (self.isHigherBetter()) {
                                     data.score > bestScore ? self._bestScoreObj[self._boardName] = bestScore : null;
@@ -187,16 +186,16 @@ FBGame.prototype = {
      * @return {Promise}
      */
     getGlobalRankData(forceUpdate) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
 
-                let globalEntries = self._globalRankEntriesObj[self._boardName];
+                var globalEntries = self._globalRankEntriesObj[self._boardName];
                 if (!globalEntries) {
                     globalEntries = self._globalRankEntriesObj[self._boardName] = [];
                 }
 
-                let deltaTime = new Date().getTime() - self._time_lastreq_global_rank;
+                var deltaTime = new Date().getTime() - self._time_lastreq_global_rank;
                 if (deltaTime < self._time_req_min_interval && globalEntries.length > 0) {
                     self._sortCacheRank(globalEntries);
                     resolve(globalEntries.concat());
@@ -210,12 +209,12 @@ FBGame.prototype = {
                             return leaderboard.getEntriesAsync(self._globalRankCount, 0);
                         })
                         .then(function (entries) {
-                            let currentId = self._fbinstant.player.getID();
+                            var currentId = self._fbinstant.player.getID();
                             self._globalRankRealCountObj[self._boardName] = entries.length;
-                            let list = self._globalRankEntriesObj[self._boardName] = [];
-                            let rank = 1;
-                            let isHigherBetter = self.isHigherBetter();
-                            for (let i = 0, length = entries.length, item; i < length; i++) {
+                            var list = self._globalRankEntriesObj[self._boardName] = [];
+                            var rank = 1;
+                            var isHigherBetter = self.isHigherBetter();
+                            for (var i = 0, length = entries.length, item; i < length; i++) {
                                 item = self._getEntryItem(entries[i]);
                                 if (currentId === item.id) {
                                     self._bestScoreObj[self._boardName] = item.score;
@@ -247,14 +246,14 @@ FBGame.prototype = {
      * @return {Promise}
      */
     getFriendsRankData(forceUpdate) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
-                let friends = self._friendsRankEntriesObj[self._boardName];
+                var friends = self._friendsRankEntriesObj[self._boardName];
                 if (!friends) {
                     friends = self._friendsRankEntriesObj[self._boardName] = [];
                 }
-                let deltaTime = new Date().getTime() - self._time_lastreq_friend_rank;
+                var deltaTime = new Date().getTime() - self._time_lastreq_friend_rank;
                 if (deltaTime < self._time_req_min_interval && friends.length > 0) {
                     self._sortCacheRank(friends);
                     resolve(friends.concat());
@@ -271,11 +270,11 @@ FBGame.prototype = {
                             return leaderboard.getConnectedPlayerEntriesAsync(self._friendsRankCount, 0);
                         })
                         .then(function (entries) {
-                            let currentId = self._fbinstant.player.getID();
-                            let list = self._friendsRankEntriesObj[self._boardName] = [];
-                            let rank = 1;
-                            let isHigherBetter = self.isHigherBetter();
-                            for (let i = 0, length = entries.length, item; i < length; i++) {
+                            var currentId = self._fbinstant.player.getID();
+                            var list = self._friendsRankEntriesObj[self._boardName] = [];
+                            var rank = 1;
+                            var isHigherBetter = self.isHigherBetter();
+                            for (var i = 0, length = entries.length, item; i < length; i++) {
                                 item = self._getEntryItem(entries[i]);
 
                                 if (currentId === item.id) {
@@ -309,19 +308,19 @@ FBGame.prototype = {
      * @warn 需要在成绩提交之前获取超越列表
      */
     getToSurpassFriends(score) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             self.getMyRankData().then(function (data) {
-                let bestScore = self._bestScoreObj[self._boardName];
-                let isHigherBetter = self.isHigherBetter();
+                var bestScore = self._bestScoreObj[self._boardName];
+                var isHigherBetter = self.isHigherBetter();
                 if (isHigherBetter) {
                     score > bestScore ? (bestScore = score) : null;
                 } else if (score !== 0) {
                     score < bestScore ? (bestScore = score) : null;
                 }
                 self.getFriendsRankData().then(function (entries) {
-                    let beyonds = [];
-                    for (let i = 0, length = entries.length, entry; i < length; i++) {
+                    var beyonds = [];
+                    for (var i = 0, length = entries.length, entry; i < length; i++) {
                         entry = entries[i];
                         if (entry.id === data.id) {
                             continue;
@@ -348,18 +347,18 @@ FBGame.prototype = {
      * @warn 需要在成绩提交之前获取超越列表
      */
     getSurpassedFriends(currentScore, lastScore) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
-            let myData = {
+            var myData = {
                 score: currentScore,
                 id: self.getMyID(),
                 name: self.getMyName(),
                 photo: self.getMyPhoto(),
-                extraData: { level: currentScore + 2 }
-            };;
-            let checkEntries = function (entries) {
-                let beyonds = [];
-                for (let i = 0, length = entries.length, entry; i < length; i++) {
+                extraData: {level: currentScore + 2}
+            };
+            var checkEntries = function (entries) {
+                var beyonds = [];
+                for (var i = 0, length = entries.length, entry; i < length; i++) {
                     entry = entries[i];
                     if (entry.id === myData.id) {
                         continue;
@@ -394,26 +393,26 @@ FBGame.prototype = {
     },
     // TODO 待优化，使用二分查找
     _getLastBetterEntry(obj, score) {
-        let entries = (obj[this._boardName] || []).concat();
-        let entryCount = entries.length;
+        var entries = (obj[this._boardName] || []).concat();
+        var entryCount = entries.length;
         if (entryCount === 0) return null;
 
-        let playerID = this._fbinstant.player.getID();
-        for (let i = 0; i < entryCount; i++) {
+        var playerID = this._fbinstant.player.getID();
+        for (var i = 0; i < entryCount; i++) {
             if (entries[i].id === playerID) {
                 entries.splice(i, 1);
                 entryCount -= 1;
                 break;
             }
         }
-        let bestScore = score;
+        var bestScore = score;
         if (bestScore === 0) return entries[entries.length - 1];
-        let middleIndex = Math.floor((entryCount - 1) / 2);
-        let middleEntry = entries[middleIndex];
-        let isBigger = middleEntry.score > bestScore;
+        var middleIndex = Math.floor((entryCount - 1) / 2);
+        var middleEntry = entries[middleIndex];
+        var isBigger = middleEntry.score > bestScore;
 
-        let startIndex = 0;
-        let endIndex = 0;
+        var startIndex = 0;
+        var endIndex = 0;
         if (this.isHigherBetter()) {
 
             if (isBigger) {
@@ -424,7 +423,7 @@ FBGame.prototype = {
                 endIndex = middleIndex;
             }
 
-            for (let i = endIndex; i >= startIndex; i--) {
+            for (var i = endIndex; i >= startIndex; i--) {
                 if (entries[i].score > bestScore) {
                     return entries[i];
                 }
@@ -442,8 +441,8 @@ FBGame.prototype = {
                 endIndex = entryCount - 1;
             }
 
-            for (let i = endIndex; i >= startIndex; i--) {
-                if (typeof entries[i + 1] != 'undefined' && entries[i + 1].score < bestScore) {
+            for (var i = endIndex; i >= startIndex; i--) {
+                if (typeof entries[i + 1] !== 'undefined' && entries[i + 1].score < bestScore) {
                     continue;
                 } else if (entries[i].score < bestScore) {
                     return entries[i];
@@ -456,29 +455,19 @@ FBGame.prototype = {
         }
     },
     isHigherBetter() {
-        return this._orderType === FBGame.OrderType.HIGHER_IS_BETTER;
+        return this._orderType === FBManager.OrderType.HIGHER_IS_BETTER;
     },
     _sortCacheRank(data) {
-        let self = this;
-        let currentId = this._fbinstant.player.getID();
-        let isHigherBetter = this.isHigherBetter();
-        for (let i = 0, length = data.length, element; i < length; i++) {
+        var self = this;
+        var currentId = this._fbinstant.player.getID();
+        var isHigherBetter = this.isHigherBetter();
+        for (var i = 0, length = data.length, element; i < length; i++) {
             element = data[i];
             if (element.id === currentId) {
-                let bestScore = self._bestScoreObj[self._boardName] || 0;
+                var bestScore = self._bestScoreObj[self._boardName] || 0;
                 if ((isHigherBetter && bestScore > element.score) ||
                     (!isHigherBetter && bestScore < element.score)) {
                     element.score = bestScore;
-                    // let extraData = element.extraData;
-                    // if (extraData) {
-                    //     let data = null;
-                    //     for (let key in extraData) {
-                    //         data = self._myExtraData[key];
-                    //         if (typeof data !== 'undefined') {
-                    //             extraData[key] = data;
-                    //         }
-                    //     }
-                    // }
                 }
                 break;
             }
@@ -499,12 +488,12 @@ FBGame.prototype = {
     },
 
     /**
-      * 实体解析
-      * @returns { {rank:Number, score:Number, extraData:any, extraData: any, timestamp:string, name:String, id:String, photo:String} } entry 
-      */
+     * 实体解析
+     * @returns { {rank:Number, score:Number, extraData:any, extraData: any, timestamp:string, name:String, id:String, photo:String} } entry
+     */
     _getEntryItem(entry) {
-        let player = entry.getPlayer();
-        let extraData = entry.getExtraData() || null;
+        var player = entry.getPlayer();
+        var extraData = entry.getExtraData() || null;
         if (extraData === 'rank') {
             extraData = null;
         }
@@ -533,7 +522,7 @@ FBGame.prototype = {
      * @return {Promise}
      */
     preloadRewardAd(id) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (!self._fbinstant) {
                 reject('not init fb !');
@@ -545,28 +534,28 @@ FBGame.prototype = {
                 return;
             }
 
-            let supportedAPIs = self._fbinstant.getSupportedAPIs();
-            let funcName = 'getRewardedVideoAsync';
+            var supportedAPIs = self._fbinstant.getSupportedAPIs();
+            var funcName = 'getRewardedVideoAsync';
             if (supportedAPIs.includes(funcName)) {
-                let instant = self._rewardAdInstant[id || self._rewardAdId];
+                var instant = self._rewardAdInstant[id || self._rewardAdId];
                 if (!instant) {
-                    let rewardedInstant = null;
+                    var rewardedInstant = null;
                     self._fbinstant[funcName](id || self._rewardAdId)
                         .then(function (rewarded) {
                             rewardedInstant = rewarded;
                             return rewarded.loadAsync();
                         }).then(function () {
-                            self._rewardAdInstant[id || self._rewardAdId] = rewardedInstant;
-                            rewardedInstant = null;
-                            resolve('Rewarded video preloaded');
-                        }).catch(function (err) {
-                            self._rewardAdInstant[id || self._rewardAdId] = null;
-                            reject('Rewarded video failed to preload : ' + err.message);
-                        });
+                        self._rewardAdInstant[id || self._rewardAdId] = rewardedInstant;
+                        rewardedInstant = null;
+                        resolve('Rewarded video preloaded');
+                    }).catch(function (err) {
+                        self._rewardAdInstant[id || self._rewardAdId] = null;
+                        reject('Rewarded video failed to preload : ' + err.message);
+                    });
                 }
 
             } else {
-                reject(`${funcName} is not Support!`);
+                reject(funcName + 'is not Support!');
             }
         });
 
@@ -576,14 +565,15 @@ FBGame.prototype = {
      * @return {Promise}
      */
     showRewardAd(id, preloadCb) {
-        let self = this;
+        var self = this;
         if (typeof id === 'function') {
             preloadCb = id;
             id = null;
         }
         return new Promise(function (resolve, reject) {
-            let instant = self._rewardAdInstant[id || self._rewardAdId];
-            self._rewardAdInstant[id || self._rewardAdId] = null;;
+            var instant = self._rewardAdInstant[id || self._rewardAdId];
+            self._rewardAdInstant[id || self._rewardAdId] = null;
+            ;
             if (instant) {
                 instant.showAsync()
                     .then(function () {
@@ -607,7 +597,7 @@ FBGame.prototype = {
      * @return {Promise}
      */
     preloadInterstitialAd(id) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (!self._fbinstant) {
                 reject('not init fbinstant');
@@ -619,26 +609,26 @@ FBGame.prototype = {
                 return;
             }
 
-            let supportedAPIs = self._fbinstant.getSupportedAPIs();
-            let funcName = 'getInterstitialAdAsync';
+            var supportedAPIs = self._fbinstant.getSupportedAPIs();
+            var funcName = 'getInterstitialAdAsync';
             if (supportedAPIs.includes(funcName)) {
-                let instant = self._interAdInstant[id || self._interstitalAdId];
+                var instant = self._interAdInstant[id || self._interstitalAdId];
                 if (!instant) {
-                    let interAdInstant = null;
+                    var interAdInstant = null;
                     self._fbinstant[funcName](id || self._interstitalAdId)
                         .then(function (interstitial) {
                             interAdInstant = interstitial;
                             return interstitial.loadAsync();
                         }).then(function () {
-                            self._interAdInstant[id || self._interstitalAdId] = interAdInstant;
-                            resolve('Interstitial Ad preloaded !');
-                        }).catch(function (err) {
-                            self._interAdInstant[id || self._interstitalAdId] = null;
-                            reject('Interstitial Ad failed to preload : ' + err.message);
-                        });
+                        self._interAdInstant[id || self._interstitalAdId] = interAdInstant;
+                        resolve('Interstitial Ad preloaded !');
+                    }).catch(function (err) {
+                        self._interAdInstant[id || self._interstitalAdId] = null;
+                        reject('Interstitial Ad failed to preload : ' + err.message);
+                    });
                 }
             } else {
-                reject(`${funcName} is not Support!`);
+                reject(funcName + 'is not Support!');
             }
         });
     },
@@ -647,13 +637,13 @@ FBGame.prototype = {
      * @return {Promise}
      */
     showInterstitialAd(id, preloadCb) {
-        let self = this;
+        var self = this;
         if (typeof id === 'function') {
             preloadCb = id;
             id = null;
         }
         return new Promise(function (resolve, reject) {
-            let instant = self._interAdInstant[id || self._interstitalAdId];
+            var instant = self._interAdInstant[id || self._interstitalAdId];
             self._interAdInstant[id || self._interstitalAdId] = null;
             if (instant) {
                 instant.showAsync()
@@ -677,7 +667,7 @@ FBGame.prototype = {
     },
 
     createShortcut() {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.canCreateShortcutAsync()
@@ -691,11 +681,11 @@ FBGame.prototype = {
                                     reject('Shortcut not created: ' + error.message);
                                 });
                         } else {
-                            reject(`Check success - but - Can't create shortcut`);
+                            reject('Check success - but - Can\'t create shortcut');
                         }
                     }).catch(function (error) {
-                        reject(`Can't create shortcut! : ` + error.message);
-                    });
+                    reject('Can\'t create shortcut! : ' + error.message);
+                });
             } else {
                 reject('not init fb!');
             }
@@ -723,11 +713,11 @@ FBGame.prototype = {
     },
     ///////////////////////////////////Data//////////////////////////////
     /**
-     * 
+     *
      * @param {Object} data An arbitrary data object, which must be less than or equal to 1000 characters when stringified.
      */
     setSessionData: function (data) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.setSessionData(data);
@@ -740,11 +730,11 @@ FBGame.prototype = {
     },
     /**
      * The game can store up to 1MB of data for each unique player.
-     * @param {Object} storeData 
-     * @param {Boolean} [flushNow] 
+     * @param {Object} storeData
+     * @param {Boolean} [flushNow]
      */
     saveData: function (storeData, flushNow) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (!storeData || 0 === Object.keys(storeData).length) {
                 return reject("saveData: [storeData] param must be Object.");
@@ -770,7 +760,7 @@ FBGame.prototype = {
         });
     },
     flushData: function () {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             self._fbinstant.player.flushDataAsync().then(function () {
                 resolve();
@@ -780,13 +770,13 @@ FBGame.prototype = {
         });
     },
     getData: function (keys) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.player.getDataAsync(keys).then(function (data) {
                     resolve(data);
                 }).catch(function (error) {
-                    reject(`can't get Data - error : ` + error.message);
+                    reject('can\'t get Data - error : ' + error.message);
                 });
             } else {
                 reject('not init fb!');
@@ -794,14 +784,66 @@ FBGame.prototype = {
         });
     },
     ////////////////////////////////Social///////////////////////////////////////
+    canSubscribeBotAsync: function () {
+        var self = this;
+        // @ts-ignore
+        return new Promise(function (resolve, reject) {
+            if (window['FBInstant']) {
+                self._fbinstant.player.canSubscribeBotAsync().then(function (can_subscribe) {
+                    if (can_subscribe) {
+                        resolve('can_subscribe');
+                    }
+                    else {
+                        reject('can\'t_subscribe');
+                    }
+                }).catch(function (e) {
+                    reject('can\'t_subscribe-error:' + e.message);
+                });
+            }
+            else {
+                reject('not init fb!');
+            }
+        });
+    },
+    subscribeBotAsync() {
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            if (window['FBInstant']) {
+                self._fbinstant.player.subscribeBotAsync().then(function () {
+                    // Player is subscribed to the bot
+                    // this.setOneDataToFBServer('subscribeBot', true);
+                    resolve();
+                }).catch(function (error) {
+                    // Handle subscription failure
+                    reject('Handle subscription failure!');
+                });
+            }
+            else {
+                reject('no init fb!');
+            }
+        });
+    },
+    switchGame(appId) {
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            if (window['FBInstant']) {
+                self._fbinstant.switchGameAsync(appId).catch(function (e) {
+                    reject(e);
+                });
+            }
+            else {
+                reject('not init fb!');
+            }
+        });
+    },
     /**
      * 从分享、邀请、挑战进入后获取的数据
      */
     getEntryPointData() {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
-                let data = self._fbinstant.getEntryPointData();
+                var data = self._fbinstant.getEntryPointData();
                 if (data) {
                     resolve(data);
                 } else {
@@ -816,15 +858,15 @@ FBGame.prototype = {
      * 获取打开的平台入口名
      */
     getEntryPointAsync() {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.getEntryPointAsync()
                     .then(function (entryPoint) {
                         resolve(entryPoint);
                     }).catch(function (error) {
-                        reject(error);
-                    });
+                    reject(error);
+                });
             } else {
                 reject('no init fb!');
             }
@@ -839,7 +881,7 @@ FBGame.prototype = {
      * @param {String} image
      */
     share: function (type, dataType, extraData, text, image) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 if (!image) {
@@ -856,7 +898,7 @@ FBGame.prototype = {
                 } else {
                     type = 'REQUEST';
                 }
-                let score = self._bestScoreObj[self._boardName] || 0;
+                var score = self._bestScoreObj[self._boardName] || 0;
                 if (!text || text === '') {
                     if (score === 0) {
                         text = self.SHARE_NEW_TEXT_TEMPLATE;
@@ -866,7 +908,7 @@ FBGame.prototype = {
                     }
                     text = text.replace('{SCORE}', score);
                 }
-                let data = {
+                var data = {
                     contextID: self._fbinstant.context.getID(),
                     score: score,
                     photo: self._fbinstant.player.getPhoto(),
@@ -895,7 +937,7 @@ FBGame.prototype = {
      * 随机匹配玩家
      */
     matchPlayers() {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.checkCanPlayerMatchAsync()
@@ -910,8 +952,8 @@ FBGame.prototype = {
                             });
                         }
                     }).catch(function (error) {
-                        reject(error);
-                    });
+                    reject(error);
+                });
             } else {
                 console.log(' not init fb！');
             }
@@ -920,17 +962,17 @@ FBGame.prototype = {
     },
 
     /**
-   * 邀请好友
-   * @param type
-   * @param extraData 
-   * @param cta    邀请信息按钮的显示内容
-   * @param text 
-   * @param image  显示图片
-   * @param template   邀请信息文本模板
-   * @return {Promise}
-   */
+     * 邀请好友
+     * @param type
+     * @param extraData
+     * @param cta    邀请信息按钮的显示内容
+     * @param text
+     * @param image  显示图片
+     * @param template   邀请信息文本模板
+     * @return {Promise}
+     */
     invite: function (type, extraData, text, cta, image, template) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.context.chooseAsync({
@@ -938,7 +980,7 @@ FBGame.prototype = {
                     minSize: 3
                 }).then(function () {
                     self.customUpdate(type || 'INVITE_FRIENDS', text, cta, image, template, extraData);
-                    self._fbinstant.logEvent(type || 'INVITE_FRIENDS', 1, { type: self._fbinstant.context.getType() });
+                    self._fbinstant.logEvent(type || 'INVITE_FRIENDS', 1, {type: self._fbinstant.context.getType()});
                     resolve();
                 }).catch(function (error) {
                     reject(error);
@@ -950,11 +992,11 @@ FBGame.prototype = {
     },
 
     /**
-    * 挑战好友
-    * @param {String} playerID
-    */
+     * 挑战好友
+     * @param {String} playerID
+     */
     challengeWithFriend: function (playerID) {
-        let self = this;
+        var self = this;
         return new Promise(function (resolve, reject) {
             if (self._fbinstant) {
                 self._fbinstant.context.createAsync(playerID)
@@ -966,8 +1008,8 @@ FBGame.prototype = {
                             }
                         );
                     }).catch(function (error) {
-                        reject(error);
-                    });
+                    reject(error);
+                });
             } else {
                 reject('not init fb !');
             }
@@ -984,7 +1026,7 @@ FBGame.prototype = {
      * @param {*} extraData  需要传递的额外数据
      */
     customUpdate(type, text, cta, image, template, extraData) {
-        let self = this;
+        var self = this;
 
         image = image || this.shareImg;
         if (type && typeof text === 'object') {
@@ -1035,10 +1077,10 @@ FBGame.prototype = {
 
         template = template || 'play_turn';
         return new Promise(function (resolve, reject) {
-            let fb = self._fbinstant;
+            var fb = self._fbinstant;
             if (fb) {
-                let player = fb.player;
-                let data = {
+                var player = fb.player;
+                var data = {
                     playerID: player.getID(),
                     contextID: fb.context.getID(),
                     photo: player.getPhoto(),
@@ -1046,7 +1088,7 @@ FBGame.prototype = {
                     type: type || 'UPDATE_CUSTOM',
                     extraData: extraData,
                 };
-                let updatePayload = {
+                var updatePayload = {
                     action: 'CUSTOM',
                     cta: cta,
                     image: image,
@@ -1100,7 +1142,7 @@ FBGame.prototype = {
     },
 
     setMyBestScore(score) {
-        let lastScore = this._bestScoreObj[this._boardName] || 0;
+        var lastScore = this._bestScoreObj[this._boardName] || 0;
         if (score > lastScore) {
             this._bestScoreObj[this._boardName] = score;
         }
@@ -1111,4 +1153,4 @@ FBGame.prototype = {
     }
 
 };
-module.exports = new FBGame();
+module.exports = new FBManager();

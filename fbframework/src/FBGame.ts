@@ -153,34 +153,34 @@ export class FBGame {
      * @return {Promise}
      */
     public submitScore(score, extraData) {
-        let self: FBGame = this;
         score = parseInt(score);
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
                 if (score <= 0) {
-                    reject('submitScore: score can\'t be [A positive number]')
+                    reject('submitScore: score can\'t be [A positive number]');
                     return;
                 }
-                let bestScore = self._bestScoreObj[self._boardName] || -1;
-                let isBetter = (self.isHigherBetter() ? score > bestScore : score < bestScore) && bestScore >= 0;
+                let bestScore = this._bestScoreObj[this._boardName] || -1;
+                let isBetter = (this.isHigherBetter() ? score > bestScore : score < bestScore) && bestScore >= 0;
                 if (isBetter || bestScore === -1) {
-                    self.setMyExtraData(extraData);
-                    self._bestScoreObj[self._boardName] = score;
-                    self._fbinstant.getLeaderboardAsync(self._boardName)
-                        .then(function (leaderboard) {
+                    this.setMyExtraData(extraData);
+                    this._bestScoreObj[this._boardName] = score;
+                    this._fbinstant.getLeaderboardAsync(this._boardName)
+                        .then((leaderboard) => {
                             return leaderboard.setScoreAsync(score, JSON.stringify(extraData || {}));
-                        }).then(function (entry) {
-                            self._fbinstant.updateAsync({
+                        }).then((entry) => {
+                            this._fbinstant.updateAsync({
                                 action: 'LEADERBOARD',
-                                name: self._boardName
-                            }).then(function () {
+                                name: this._boardName
+                            }).then(() => {
                                 console.log('update-rank-score');
-                            }).catch(function (error) {
+                            }).catch((error) => {
                                 console.log('update-rank-score-error', error);
                             });
                             resolve('Update Posted');
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             reject('submitScore-error : ' + error.message);
                         });
                 } else {
@@ -198,22 +198,23 @@ export class FBGame {
      * @return {Promise}
      */
     public getMyRankData() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.getLeaderboardAsync(self._boardName)
-                    .then(function (leaderboard) {
+        
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.getLeaderboardAsync(this._boardName)
+                    .then((leaderboard) => {
                         return leaderboard.getPlayerEntryAsync();
                     })
-                    .then(function (entry) {
+                    .then((entry) => {
                         if (entry) {
                             let data = new Entry(entry);
-                            let bestScore = self._bestScoreObj[self._boardName];
+                            let bestScore = this._bestScoreObj[this._boardName];
                             if (typeof bestScore === 'number') {
-                                if (self.isHigherBetter()) {
-                                    data.score > bestScore ? self._bestScoreObj[self._boardName] = bestScore : null;
+                                if (this.isHigherBetter()) {
+                                    data.score > bestScore ? this._bestScoreObj[this._boardName] = bestScore : null;
                                 } else if (data.score !== 0 && data.score < bestScore) {
-                                    self._bestScoreObj[self._boardName] = bestScore;
+                                    this._bestScoreObj[this._boardName] = bestScore;
                                 }
                             }
                             resolve(data);
@@ -221,7 +222,7 @@ export class FBGame {
                             reject('None Data!');
                         }
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                         reject('getMyRankData-error : ' + error.message);
                     });
             } else {
@@ -235,38 +236,38 @@ export class FBGame {
      * @return {Promise}
      */
     public getGlobalRankData(forceUpdate) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
 
-                let globalEntries = self._globalRankEntriesObj[self._boardName];
+                let globalEntries = this._globalRankEntriesObj[this._boardName];
                 if (!globalEntries) {
-                    globalEntries = self._globalRankEntriesObj[self._boardName] = [];
+                    globalEntries = this._globalRankEntriesObj[this._boardName] = [];
                 }
 
-                let deltaTime = (new Date().getTime()) - self._time_lastreq_global_rank;
-                if (deltaTime < self._time_req_min_interval && globalEntries.length > 0) {
-                    self._sortCacheRank(globalEntries);
+                let deltaTime = (new Date().getTime()) - this._time_lastreq_global_rank;
+                if (deltaTime < this._time_req_min_interval && globalEntries.length > 0) {
+                    this._sortCacheRank(globalEntries);
                     resolve(globalEntries.concat());
                 } else if (!forceUpdate && globalEntries.length > 0) {
-                    self._sortCacheRank(globalEntries);
+                    this._sortCacheRank(globalEntries);
                     resolve(globalEntries.concat());
                 } else {
-                    self._time_lastreq_global_rank = new Date().getTime();
-                    self._fbinstant.getLeaderboardAsync(self._boardName)
-                        .then(function (leaderboard) {
-                            return leaderboard.getEntriesAsync(self._globalRankCount, 0);
+                    this._time_lastreq_global_rank = new Date().getTime();
+                    this._fbinstant.getLeaderboardAsync(this._boardName)
+                        .then((leaderboard) => {
+                            return leaderboard.getEntriesAsync(this._globalRankCount, 0);
                         })
                         .then(function (entries) {
-                            let currentId = self._fbinstant.player.getID();
-                            self._globalRankRealCountObj[self._boardName] = entries.length;
-                            let list = self._globalRankEntriesObj[self._boardName] = [];
+                            let currentId = this._fbinstant.player.getID();
+                            this._globalRankRealCountObj[this._boardName] = entries.length;
+                            let list = this._globalRankEntriesObj[this._boardName] = [];
                             let rank = 1;
-                            let isHigherBetter = self.isHigherBetter();
+                            let isHigherBetter = this.isHigherBetter();
                             for (let i = 0, length = entries.length, item; i < length; i++) {
                                 item = new Entry(entries[i]);
                                 if (currentId === item.id) {
-                                    self._bestScoreObj[self._boardName] = item.score;
+                                    this._bestScoreObj[this._boardName] = item.score;
                                 }
                                 if (!isHigherBetter && item.score === 0) {
                                     continue;
@@ -276,9 +277,9 @@ export class FBGame {
                             }
                             resolve(list.concat());
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             if (globalEntries && globalEntries.length > 0) {
-                                globalEntries = self._sortCacheRank(globalEntries);
+                                globalEntries = this._sortCacheRank(globalEntries);
                                 resolve(globalEntries.concat());
                             } else {
                                 reject('getGlobalRankData-error : ' + error.message);
@@ -295,40 +296,40 @@ export class FBGame {
      * @return {Promise}
      */
     public getFriendsRankData(forceUpdate?) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                let friends = self._friendsRankEntriesObj[self._boardName];
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                let friends = this._friendsRankEntriesObj[this._boardName];
                 if (!friends) {
-                    friends = self._friendsRankEntriesObj[self._boardName] = [];
+                    friends = this._friendsRankEntriesObj[this._boardName] = [];
                 }
-                let deltaTime = (new Date().getTime()) - self._time_lastreq_friend_rank;
-                if (deltaTime < self._time_req_min_interval && friends.length > 0) {
-                    self._sortCacheRank(friends);
+                let deltaTime = (new Date().getTime()) - this._time_lastreq_friend_rank;
+                if (deltaTime < this._time_req_min_interval && friends.length > 0) {
+                    this._sortCacheRank(friends);
                     resolve(friends.concat());
                 } else if (!forceUpdate && friends.length > 0) {
 
-                    friends = self._sortCacheRank(friends);
+                    friends = this._sortCacheRank(friends);
                     resolve(friends.concat());
 
                 } else {
-                    self._time_lastreq_friend_rank = new Date().getTime();
+                    this._time_lastreq_friend_rank = new Date().getTime();
                     // 从服务器获取排行数据
-                    self._fbinstant.getLeaderboardAsync(self._boardName)
-                        .then(function (leaderboard) {
-                            return leaderboard.getConnectedPlayerEntriesAsync(self._friendsRankCount, 0);
+                    this._fbinstant.getLeaderboardAsync(this._boardName)
+                        .then((leaderboard) => {
+                            return leaderboard.getConnectedPlayerEntriesAsync(this._friendsRankCount, 0);
                         })
                         .then(function (entries) {
-                            let currentId = self._fbinstant.player.getID();
-                            let list = self._friendsRankEntriesObj[self._boardName] = [];
+                            let currentId = this._fbinstant.player.getID();
+                            let list = this._friendsRankEntriesObj[this._boardName] = [];
                             let rank = 1;
-                            let isHigherBetter = self.isHigherBetter();
+                            let isHigherBetter = this.isHigherBetter();
                             for (let i = 0, length = entries.length, item; i < length; i++) {
                                 item = new Entry(entries[i]);
 
                                 if (currentId === item.id) {
-                                    self._bestScoreObj[self._boardName] = item.score;
-                                    self._hasSelf = true;
+                                    this._bestScoreObj[this._boardName] = item.score;
+                                    this._hasSelf = true;
                                 }
                                 if (!isHigherBetter && item.score === 0) {
                                     continue;
@@ -338,9 +339,9 @@ export class FBGame {
                             }
                             resolve(list.concat());
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             if (friends && friends.length > 0) {
-                                friends = self._sortCacheRank(friends);
+                                friends = this._sortCacheRank(friends);
                                 resolve(friends.concat());
                             } else {
                                 reject('getFriendsRankData-error : ' + error.message);
@@ -357,17 +358,17 @@ export class FBGame {
      * @warn 需要在成绩提交之前获取超越列表
      */
     public getToSurpassFriends(score) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            self.getMyRankData().then(function (data: Entry) {
-                let bestScore = self._bestScoreObj[self._boardName];
-                let isHigherBetter = self.isHigherBetter();
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            this.getMyRankData().then(function (data: Entry) {
+                let bestScore = this._bestScoreObj[this._boardName];
+                let isHigherBetter = this.isHigherBetter();
                 if (isHigherBetter) {
                     score > bestScore ? (bestScore = score) : null;
                 } else if (score !== 0) {
                     score < bestScore ? (bestScore = score) : null;
                 }
-                self.getFriendsRankData().then(function (entries: []) {
+                this.getFriendsRankData().then(function (entries: []) {
                     let beyonds = [];
                     for (let i = 0, length = entries.length, entry; i < length; i++) {
                         entry = entries[i];
@@ -386,7 +387,7 @@ export class FBGame {
                     }
                     resolve([data, beyonds]);
                 });
-            }).catch(function (error) {
+            }).catch((error) => {
                 reject('get Play info error: ' + error.message);
             });
         });
@@ -396,13 +397,13 @@ export class FBGame {
      * @warn 需要在成绩提交之前获取超越列表
      */
     public getSurpassedFriends(currentScore, lastScore) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
             let myData = {
                 score: currentScore,
-                id: self.getMyID(),
-                name: self.getMyName(),
-                photo: self.getMyPhoto(),
+                id: this.getMyID(),
+                name: this.getMyName(),
+                photo: this.getMyPhoto(),
                 extraData: { level: currentScore + 2 }
             };
             let checkEntries = function (entries) {
@@ -413,7 +414,7 @@ export class FBGame {
                         continue;
                     }
                     if (lastScore !== -1) {
-                        if (self.isHigherBetter()) {
+                        if (this.isHigherBetter()) {
                             if (currentScore > entry.score && lastScore <= entry.score) {
                                 beyonds.push(entry);
                             }
@@ -427,7 +428,7 @@ export class FBGame {
                 }
                 resolve([myData, beyonds]);
             };
-            self.getFriendsRankData().then(function (entries) {
+            this.getFriendsRankData().then(function (entries) {
                 checkEntries(entries);
             }).catch(function (err) {
                 reject('get Play info error: ' + err.message);
@@ -505,13 +506,12 @@ export class FBGame {
     }
 
     private _sortCacheRank(data) {
-        let self = this;
         let currentId = this._fbinstant.player.getID();
         let isHigherBetter = this.isHigherBetter();
         for (let i = 0, length = data.length, element; i < length; i++) {
             element = data[i];
             if (element.id === currentId) {
-                let bestScore = self._bestScoreObj[self._boardName] || 0;
+                let bestScore = this._bestScoreObj[this._boardName] || 0;
                 if ((isHigherBetter && bestScore > element.score) ||
                     (!isHigherBetter && bestScore < element.score)) {
                     element.score = bestScore;
@@ -519,7 +519,7 @@ export class FBGame {
                     if (extraData) {
                         let data = null;
                         for (let key in extraData) {
-                            data = self._myExtraData[key];
+                            data = this._myExtraData[key];
                             if (typeof data !== 'undefined') {
                                 extraData[key] = data;
                             }
@@ -529,7 +529,7 @@ export class FBGame {
                 break;
             }
         }
-        data.sort(isHigherBetter ? self._descendingOrderScore : self._ascendingOrderScore);
+        data.sort(isHigherBetter ? this._descendingOrderScore : this._ascendingOrderScore);
         data.forEach(function (element, index) {
             element.rank = index + 1;
         });
@@ -558,34 +558,34 @@ export class FBGame {
      * @return {Promise}
      */
     public preloadRewardAd(id?) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (!self._fbinstant) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (!this._fbinstant) {
                 reject('not init fb !');
                 return;
             }
 
-            if (!id && !self._rewardAdId) {
+            if (!id && !this._rewardAdId) {
                 reject('has no placement id-Ad!');
                 return;
             }
 
-            let supportedAPIs = self._fbinstant.getSupportedAPIs();
+            let supportedAPIs = this._fbinstant.getSupportedAPIs();
             let funcName = 'getRewardedVideoAsync';
             if (supportedAPIs.includes(funcName)) {
-                let instant = self._rewardAdInstant[id || self._rewardAdId];
+                let instant = this._rewardAdInstant[id || this._rewardAdId];
                 if (!instant) {
                     let rewardedInstant = null;
-                    self._fbinstant[funcName](id || self._rewardAdId)
+                    this._fbinstant[funcName](id || this._rewardAdId)
                         .then(function (rewarded) {
                             rewardedInstant = rewarded;
                             return rewarded.loadAsync();
-                        }).then(function () {
-                            self._rewardAdInstant[id || self._rewardAdId] = rewardedInstant;
+                        }).then(() => {
+                            this._rewardAdInstant[id || this._rewardAdId] = rewardedInstant;
                             rewardedInstant = null;
                             resolve('Rewarded video preloaded');
                         }).catch(function (err) {
-                            self._rewardAdInstant[id || self._rewardAdId] = null;
+                            this._rewardAdInstant[id || this._rewardAdId] = null;
                             reject('Rewarded video failed to preload : ' + err.message);
                         });
                 }
@@ -601,18 +601,18 @@ export class FBGame {
      * @return {Promise}
      */
     public showRewardAd(id?, preloadCb?) {
-        let self = this;
         if (typeof id === 'function') {
             preloadCb = id;
             id = null;
         }
-        return new Promise(function (resolve, reject) {
-            let instant = self._rewardAdInstant[id || self._rewardAdId];
-            self._rewardAdInstant[id || self._rewardAdId] = null;;
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            let instant = this._rewardAdInstant[id || this._rewardAdId];
+            this._rewardAdInstant[id || this._rewardAdId] = null;;
             if (instant) {
                 instant.showAsync()
-                    .then(function () {
-                        self.preloadRewardAd(id || self._rewardAdId).then(function () {
+                    .then(() => {
+                        this.preloadRewardAd(id || this._rewardAdId).then(() => {
                             preloadCb && preloadCb('preload');
                         }).catch(function (message) {
                             preloadCb && preloadCb('-- show Inter Ad end -- preload another Ad instant fail! :' + message);
@@ -632,33 +632,33 @@ export class FBGame {
      * @return {Promise}
      */
     public preloadInterstitialAd(id?) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (!self._fbinstant) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (!this._fbinstant) {
                 reject('not init fbinstant');
                 return;
             }
 
-            if (!id && !self._interstitalAdId) {
+            if (!id && !this._interstitalAdId) {
                 reject('has no placement id - ad!');
                 return;
             }
 
-            let supportedAPIs = self._fbinstant.getSupportedAPIs();
+            let supportedAPIs = this._fbinstant.getSupportedAPIs();
             let funcName = 'getInterstitialAdAsync';
             if (supportedAPIs.includes(funcName)) {
-                let instant = self._interAdInstant[id || self._interstitalAdId];
+                let instant = this._interAdInstant[id || this._interstitalAdId];
                 if (!instant) {
                     let interAdInstant = null;
-                    self._fbinstant[funcName](id || self._interstitalAdId)
+                    this._fbinstant[funcName](id || this._interstitalAdId)
                         .then(function (interstitial) {
                             interAdInstant = interstitial;
                             return interstitial.loadAsync();
-                        }).then(function () {
-                            self._interAdInstant[id || self._interstitalAdId] = interAdInstant;
+                        }).then(() => {
+                            this._interAdInstant[id || this._interstitalAdId] = interAdInstant;
                             resolve('Interstitial Ad preloaded !');
                         }).catch(function (err) {
-                            self._interAdInstant[id || self._interstitalAdId] = null;
+                            this._interAdInstant[id || this._interstitalAdId] = null;
                             reject('Interstitial Ad failed to preload : ' + err.message);
                         });
                 }
@@ -672,19 +672,19 @@ export class FBGame {
      * @return {Promise}
      */
     public showInterstitialAd(id?, preloadCb?) {
-        let self = this;
         if (typeof id === 'function') {
             preloadCb = id;
             id = null;
         }
-        return new Promise(function (resolve, reject) {
-            let instant = self._interAdInstant[id || self._interstitalAdId];
-            self._interAdInstant[id || self._interstitalAdId] = null;
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            let instant = this._interAdInstant[id || this._interstitalAdId];
+            this._interAdInstant[id || this._interstitalAdId] = null;
             if (instant) {
                 instant.showAsync()
-                    .then(function () {
-                        self.preloadInterstitialAd(id || self._interstitalAdId)
-                            .then(function () {
+                    .then(() => {
+                        this.preloadInterstitialAd(id || this._interstitalAdId)
+                            .then(() => {
                                 preloadCb && preloadCb('preload');
                             })
                             .catch(function (message) {
@@ -692,7 +692,7 @@ export class FBGame {
                             });
                         resolve('show Inter Ad success!');
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                         reject('showInterstitialAd-error : ' + error.message);
                     });
             } else {
@@ -702,23 +702,23 @@ export class FBGame {
     }
 
     public createShortcut() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.canCreateShortcutAsync()
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.canCreateShortcutAsync()
                     .then(function (canCreateShortcut) {
                         if (canCreateShortcut) {
-                            self._fbinstant.createShortcutAsync()
-                                .then(function () {
+                            this._fbinstant.createShortcutAsync()
+                                .then(() => {
                                     resolve('Shortcut created');
                                 })
-                                .catch(function (error) {
+                                .catch((error) => {
                                     reject('Shortcut not created: ' + error.message);
                                 });
                         } else {
                             reject(`Check success - but - Can't create shortcut`);
                         }
-                    }).catch(function (error) {
+                    }).catch((error) => {
                         reject(`Can't create shortcut! : ` + error.message);
                     });
             } else {
@@ -736,9 +736,9 @@ export class FBGame {
     }
     public onPause(cb) {
         if (this._fbinstant) {
-            this._fbinstant.onPause(cb || function () {
+            this._fbinstant.onPause(cb || (()=> {
                 console.log('pause event trigger');
-            });
+            }));
         }
     }
     public logEvent(eventName, valueToSum, parameters) {
@@ -752,10 +752,10 @@ export class FBGame {
      * @param {Object} data An arbitrary data object, which must be less than or equal to 1000 characters when stringified.
      */
     public setSessionData(data) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.setSessionData(data);
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.setSessionData(data);
                 resolve('has saved');
             } else {
                 reject('not init fb!');
@@ -767,19 +767,19 @@ export class FBGame {
      * The game can store up to 1MB of data for each unique player.
      */
     public saveData(storeData, flushNow?: boolean) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
             if (!storeData || 0 === Object.keys(storeData).length) {
                 return reject("saveData: [storeData] param must be Object.");
             }
 
-            if (self._fbinstant) {
+            if (this._fbinstant) {
                 flushNow = void 0 !== flushNow && flushNow;
-                self._fbinstant.player.setDataAsync(storeData).then(function () {
+                this._fbinstant.player.setDataAsync(storeData).then(() => {
                     if (flushNow) {
-                        self.flushData().then(function () {
+                        this.flushData().then(() => {
                             resolve('flush save success');
-                        }).catch(function (error) {
+                        }).catch((error) => {
                             reject(error);
                         });
                     }
@@ -793,22 +793,22 @@ export class FBGame {
         });
     }
     public flushData() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            self._fbinstant.player.flushDataAsync().then(function () {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            this._fbinstant.player.flushDataAsync().then(() => {
                 resolve();
-            }).catch(function (error) {
+            }).catch((error) => {
                 reject(error);
             });
         });
     }
     public getData(keys: string[]) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.player.getDataAsync(keys).then(function (data) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.player.getDataAsync(keys).then((data) => {
                     resolve(data);
-                }).catch(function (error) {
+                }).catch((error) => {
                     reject(`can't get Data - error : ` + error.message);
                 });
             } else {
@@ -817,14 +817,65 @@ export class FBGame {
         });
     }
     ////////////////////////////////Social///////////////////////////////////////
+    canSubscribeBotAsync () {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (window['FBInstant']) {
+                this._fbinstant.player.canSubscribeBotAsync().then((can_subscribe) => {
+                    if (can_subscribe) {
+                        resolve('can_subscribe');
+                    }
+                    else {
+                        reject('can\'t_subscribe');
+                    }
+                }).catch((e)=>{
+                    reject('can\'t_subscribe-error:' + e.message);
+                });
+            }
+            else {
+                reject('not init fb!');
+            }
+        });
+    }
+    subscribeBotAsync () {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (window['FBInstant']) {
+                this._fbinstant.player.subscribeBotAsync().then(() => {
+                    // Player is subscribed to the bot
+                    // this.setOneDataToFBServer('subscribeBot', true);
+                    resolve();
+                }).catch((error) => {
+                    // Handle subscription failure
+                    reject('Handle subscription failure!');
+                });
+            }
+            else {
+                reject('no init fb!');
+            }
+        });
+    }
+    switchGame(appId) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (window['FBInstant']) {
+                this._fbinstant.switchGameAsync(appId).catch((e) => {
+                    reject(e);
+                });
+            }
+            else {
+                reject('not init fb!');
+            }
+        });
+    }
     /**
      * 从分享、邀请、挑战进入后获取的数据
      */
     public getEntryPointData() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                let data = self._fbinstant.getEntryPointData();
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                let data = this._fbinstant.getEntryPointData();
                 if (data) {
                     resolve(data);
                 } else {
@@ -839,13 +890,13 @@ export class FBGame {
      * 获取打开的平台入口名
      */
     public getEntryPointAsync() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.getEntryPointAsync()
-                    .then(function (entryPoint) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.getEntryPointAsync()
+                    .then( (entryPoint) => {
                         resolve(entryPoint);
-                    }).catch(function (error) {
+                    }).catch((error) => {
                         reject(error);
                     });
             } else {
@@ -856,17 +907,17 @@ export class FBGame {
 
     /**
      * 分享
-     * @param  type
+     * @param  shareType
      * @param  extraData
      * @param  text
      * @param  image base64
      */
-    public share(type: ShareType, dataType: string, extraData?: {}, text?: string, image?: string) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
+    public share(shareType: ShareType, extraData?: {}, text?: string, image?: string) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
                 if (!image) {
-                    image = self.shareImg;
+                    image = this.shareImg;
                 }
 
                 if (image.indexOf('data:image/') !== 0) {
@@ -874,39 +925,38 @@ export class FBGame {
                     return;
                 }
 
-                if (!type) {
-                    type = ShareType.SHARE;
+                if (!shareType) {
+                    shareType = ShareType.SHARE;
                 } else {
-                    type = ShareType.REQUEST;
+                    shareType = ShareType.REQUEST;
                 }
-                let score = self._bestScoreObj[self._boardName] || 0;
+                let score = this._bestScoreObj[this._boardName] || 0;
                 if (!text || text === '') {
                     if (score === 0) {
-                        text = self.SHARE_NEW_TEXT_TEMPLATE;
+                        text = this.SHARE_NEW_TEXT_TEMPLATE;
                     }
                     else {
-                        text = self.SHARE_SCORE_TEXT_TEMPLATE;
+                        text = this.SHARE_SCORE_TEXT_TEMPLATE;
                     }
                     text = text.replace('{SCORE}', score);
                 }
                 let data = {
-                    contextID: self._fbinstant.context.getID(),
+                    contextID: this._fbinstant.context.getID(),
                     score: score,
-                    photo: self._fbinstant.player.getPhoto(),
-                    playerID: self._fbinstant.player.getID(),
-                    type: dataType || type,
+                    photo: this._fbinstant.player.getPhoto(),
+                    playerID: this._fbinstant.player.getID(),
                     extraData: extraData,
                 };
-                self._fbinstant.shareAsync({
-                    intent: type,
+                this._fbinstant.shareAsync({
+                    intent: shareType,
                     text: text,
                     image: image,
                     data: data
-                }).then(function (data) { // 不管分享成功还是失败
+                }).then((data) => { // 不管分享成功还是失败
                     // continue with the game
-                    self._fbinstant.logEvent('SHARE_' + type, 1, data);
+                    this._fbinstant.logEvent('SHARE_' + shareType, 1, data);
                     resolve(data);
-                }).catch(function (error) {
+                }).catch((error) => {
                     reject(error);
                 });
             } else {
@@ -918,21 +968,21 @@ export class FBGame {
      * 随机匹配玩家
      */
     public matchPlayers() {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.checkCanPlayerMatchAsync()
-                    .then(function (canMatch) {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.checkCanPlayerMatchAsync()
+                    .then((canMatch) => {
                         if (canMatch) {
-                            self._fbinstant.matchPlayerAsync().then(function () {
-                                self.customUpdate('RANDOM_MATCH_PLAYER');
-                                self._fbinstant.logEvent('RANDOM_MATCH_PLAYER', 1);
+                            this._fbinstant.matchPlayerAsync().then(() => {
+                                this.customUpdate('RANDOM_MATCH_PLAYER');
+                                this._fbinstant.logEvent('RANDOM_MATCH_PLAYER', 1);
                                 resolve('success match');
-                            }).catch(function (error) {
+                            }).catch((error) => {
                                 reject('match-error : ' + error.message);
                             });
                         }
-                    }).catch(function (error) {
+                    }).catch((error) => {
                         reject(error);
                     });
             } else {
@@ -953,17 +1003,17 @@ export class FBGame {
    * @return {Promise}
    */
     public invite(type?: string, extraData?: {}, text?: string | {}, cta?: string | {}, image?: string, template?: string) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.context.chooseAsync({
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.context.chooseAsync({
                     filters: [],
                     minSize: 3
-                }).then(function () {
-                    self.customUpdate(type || 'INVITE_FRIENDS', text, cta, image, template, extraData);
-                    self._fbinstant.logEvent(type || 'INVITE_FRIENDS', 1, { type: self._fbinstant.context.getType() });
+                }).then(() => {
+                    this.customUpdate(type || 'INVITE_FRIENDS', text, cta, image, template, extraData);
+                    this._fbinstant.logEvent(type || 'INVITE_FRIENDS', 1, { type: this._fbinstant.context.getType() });
                     resolve();
-                }).catch(function (error) {
+                }).catch((error) => {
                     reject(error);
                 });
             } else {
@@ -977,18 +1027,18 @@ export class FBGame {
     * @param {String} playerID
     */
     public challengeWithFriend(playerID) {
-        let self = this;
-        return new Promise(function (resolve, reject) {
-            if (self._fbinstant) {
-                self._fbinstant.context.createAsync(playerID)
-                    .then(function () {
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            if (this._fbinstant) {
+                this._fbinstant.context.createAsync(playerID)
+                    .then(() => {
                         resolve();
-                        self._fbinstant.logEvent(
+                        this._fbinstant.logEvent(
                             "CHALLENGE_WITH_FRIENDS", 1, {
-                                type: self._fbinstant.context.getType()
+                                type: this._fbinstant.context.getType()
                             }
                         );
-                    }).catch(function (error) {
+                    }).catch((error) => {
                         reject(error);
                     });
             } else {
@@ -1002,15 +1052,14 @@ export class FBGame {
      * @param {String} type   更新类型
      * @param {String | Object} text   信息显示文本
      * @param {String} cta    信息更新提交后显示的进入游戏按钮
-     * @param {base64Image} image 显示的图片
+     * @param {String} image 显示的图片
      * @param {String} template  显示的文本内容
      * @param {*} extraData  需要传递的额外数据
      */
     public customUpdate(type?, text?, cta?, image?, template?, extraData?) {
-        let self = this;
 
         image = image || this.shareImg;
-        if (type && typeof text === 'object') {
+        if (type && typeof text === 'object' && !text.default) {
             text = {
                 default: text.en,
                 localizations: {
@@ -1020,7 +1069,7 @@ export class FBGame {
                     zh_TW: text.zh
                 }
             };
-        } else {
+        } else if (typeof text === 'string') {
             text = {
                 default: text,
                 localizations: {
@@ -1030,8 +1079,9 @@ export class FBGame {
                     zh_TW: text
                 }
             };
+        }else if (!text) {
+            text = 'Come On!';
         }
-
         if (cta && typeof cta === 'object') {
             cta = {
                 default: cta.en,
@@ -1057,15 +1107,16 @@ export class FBGame {
 
 
         template = template || 'play_turn';
-        return new Promise(function (resolve, reject) {
-            let fb = self._fbinstant;
+        // @ts-ignore
+        return new Promise((resolve, reject) => {
+            let fb = this._fbinstant;
             if (fb) {
                 let player = fb.player;
                 let data = {
                     playerID: player.getID(),
                     contextID: fb.context.getID(),
                     photo: player.getPhoto(),
-                    score: self._bestScoreObj[self._boardName],
+                    score: this._bestScoreObj[this._boardName],
                     type: type || 'UPDATE_CUSTOM',
                     extraData: extraData,
                 };
@@ -1080,9 +1131,9 @@ export class FBGame {
                     notification: 'NO_PUSH',
                 };
                 // console.log('update-payload', updatePayload);
-                fb.updateAsync(updatePayload).then(function () {
+                fb.updateAsync(updatePayload).then(() => {
                     resolve('Custom-Update Message was sent successfully');
-                }).catch(function (error) {
+                }).catch((error) => {
                     reject(error);
                 });
             } else {
@@ -1115,7 +1166,7 @@ export class FBGame {
         if (this._fbinstant) {
             return this._fbinstant.player.getPhoto();
         }
-        return null;
+        return '';
     }
 
     public getMyBestScore() {

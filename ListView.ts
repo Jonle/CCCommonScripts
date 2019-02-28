@@ -31,8 +31,6 @@ export class ListView {
     private col: number;
     private item_width: number;
     private item_height: number;
-    private item_anchorX: number;
-    private item_anchorY: number;
     private cb_host: any;
     private item_setter: (item: cc.Node, data: any, index: number) => void;
     private recycle_cb: (item: cc.Node) => void;
@@ -53,8 +51,6 @@ export class ListView {
         this.item_tpl = params.item_tpl;
         this.item_width = this.item_tpl.data.width;
         this.item_height = this.item_tpl.data.height;
-        this.item_anchorX = this.item_tpl.data.anchorX;
-        this.item_anchorY = this.item_tpl.data.anchorY;
         this.dir = params.direction || ListViewDir.Vertical;
         this.width = params.width || this.mask.width;
         this.height = params.height || this.mask.height;
@@ -125,11 +121,10 @@ export class ListView {
             let stop: number = this.items.length - 1;
             let viewport_start: number = -posy;
             let viewport_stop: number = viewport_start - this.height;
-            let item_gapHeight: number = this.item_height*this.item_anchorY;
-            while (this.items[start].y - item_gapHeight > viewport_start) {
+            while (this.items[start].y - this.item_height > viewport_start) {
                 start++;
             }
-            while (this.items[stop].y < viewport_stop) {
+            while (this.items[stop].y + this.item_height < viewport_stop) {
                 stop--;
             }
             if (start != this.start_index && stop != this.stop_index) {
@@ -156,7 +151,7 @@ export class ListView {
             while (this.items[start].x + this.item_width < viewport_start) {
                 start++;
             }
-            while (this.items[stop].x > viewport_stop) {
+            while (this.items[stop].x - this.item_width > viewport_stop) {
                 stop--;
             }
             if (start != this.start_index && stop != this.stop_index) {
