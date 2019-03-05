@@ -1,5 +1,6 @@
 
 let Type = cc.Enum({
+    NONE:0,
     CONTENT:1,
     SCALE:2
 });
@@ -12,9 +13,37 @@ cc.Class({
         type:{
             default:1,
             type:Type
+        },
+        _useMask:false,
+        useMask :{
+            get () {
+                return this._useMask;
+            },
+            set (value) {
+                if(cc.sys.isMobile) {
+                    value = false;
+                }
+                this._useMask = value;
+                let mask = this.node.getComponent(cc.Mask);
+                if(value && !mask) {
+                    if(!this.node.getComponent(cc.RenderComponent)) {
+                        mask = this.node.addComponent(cc.Mask);
+                    }
+                } else if(!value && mask) {
+                    this.node.removeComponent(cc.Mask);
+                    mask = null;
+                }
+                if(!mask && this._useMask) {
+                    this.useMask = false;
+                    CC_EDITOR && Editor.warn('每个节点只能存在一个渲染组件，当前使用Mask组件无效！');
+                }
+            }
         }
     },
     onLoad () {
+        if(!cc.sys.isMobile) {
+            this.type = Type.NONE;
+        }
         if(this.type === Type.CONTENT) {
             this.setFitContent(this.node);
         } else if(this.type === Type.SCALE) {
@@ -47,5 +76,5 @@ cc.Class({
             // 2. 基于第一步的数据，再做缩放适配
             node.scale = Math.max(cc.view.getCanvasSize().width / realWidth, cc.view.getCanvasSize().height / realHeight);
         }
-    }
+    },
 });
