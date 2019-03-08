@@ -12,14 +12,23 @@ cc.Class({
     properties: {
         type:{
             default:1,
-            type:Type
+            type:Type,
+            notify() {
+                if(this.type === Type.SCALE || this.type === Type.CONTENT) {
+                    cc.Canvas.instance.fitWidth = true;
+                    cc.Canvas.instance.fitHeight = true;
+                }
+            },
+            tooltip:'WARN:该组件会强制使用SHOW_ALL模式。\n尺寸适配类型：\n1、CONTENT: 内容适配，适合UI、窗口等布局使用。\n2、SCALE: 缩放适配，适合背景使用。'
         },
+        _tempMask:null,
         _useMask:false,
         useMask :{
             get () {
                 return this._useMask;
             },
             set (value) {
+
                 if(cc.sys.isMobile) {
                     value = false;
                 }
@@ -37,7 +46,8 @@ cc.Class({
                     this.useMask = false;
                     CC_EDITOR && Editor.warn('每个节点只能存在一个渲染组件，当前使用Mask组件无效！');
                 }
-            }
+            },
+            tooltip:'默认：false。\n使用遮罩遮挡视窗外元素，\n如果已添加请忽略。'
         }
     },
     onLoad () {
